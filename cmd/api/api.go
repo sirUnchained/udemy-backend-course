@@ -20,35 +20,40 @@ type config struct {
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 
-	// it is a simple logger
+	// a simple logger for HTTP requests
 	r.Use(middleware.Logger)
-	// it is going to recover from panics
+	// recovers from panics and returns 500 error
 	r.Use(middleware.Recoverer)
-	// it is going to set a real ip from X-Real-IP or X-Forwarded-For headers
+	// sets real IP from X-Real-IP or X-Forwarded-For headers
 	r.Use(middleware.RealIP)
-	// it is going to set a request id for each request
+	// adds a unique request ID to each request
 	r.Use(middleware.RequestID)
-	// it is a timeout for requests
+	// sets timeout for requests to prevent hanging connections
 	r.Use((middleware.Timeout(time.Second * 60)))
 
+	// API v1 routes
 	r.Route("/v1", func(r chi.Router) {
+		// health check endpoint
 		r.Get("/health", app.healthCheckHandler)
 	})
 
-	// chi.Mux impeliments http.Handler, so there is no problem for return it
+	// chi.Mux implements http.Handler interface, we have no error if we return it
 	return r
 }
 
 func (app *application) run(mux http.Handler) error {
+	// Configure HTTP server settings
 	srv := &http.Server{
-		Addr:         app.config.addr,
-		Handler:      mux,
-		WriteTimeout: time.Second * 30,
-		ReadTimeout:  time.Second * 10,
-		IdleTimeout:  time.Minute * 1,
+		Addr:         app.config.addr,  // Server address to listen on
+		Handler:      mux,              // request router/handler
+		WriteTimeout: time.Second * 30, // maximum duration before timing out writes
+		ReadTimeout:  time.Second * 10, // maximum duration before timing out reads
+		IdleTimeout:  time.Minute * 1,  // maximum idle connection timeout
 	}
 
-	log.Printf("server listen on %s", app.config.addr)
+	// Log server start information
+	log.Printf("server listening on %s", app.config.addr)
 
+	// Start the HTTP server
 	return srv.ListenAndServe()
 }

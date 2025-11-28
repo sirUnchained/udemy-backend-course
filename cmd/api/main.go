@@ -1,9 +1,13 @@
 package main
 
-import "log"
+import (
+	"log"
+
+	"github.com/sirUnchained/udemy-backend-course/internal/env"
+)
 
 func main() {
-	cfg := config{addr: ":4000"}
+	cfg := config{addr: env.GetString("ADDR", ":8000")}
 	app := &application{config: cfg}
 
 	mux := app.mount()

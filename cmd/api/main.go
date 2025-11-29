@@ -1,3 +1,5 @@
+// i added storage (database entities) for users and posts and put it in application struct; then i changed some env varables; then i added db file which is for database connections, i also installed postgres driver in this step; then we changed config struct for database.
+
 package main
 
 import (
@@ -5,7 +7,9 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/sirUnchained/udemy-backend-course/internal/db"
 	"github.com/sirUnchained/udemy-backend-course/internal/env"
+	"github.com/sirUnchained/udemy-backend-course/internal/store"
 )
 
 func main() {
@@ -14,8 +18,27 @@ func main() {
 		log.Fatalln(err)
 		os.Exit(-1)
 	}
-	cfg := config{addr: env.GetString("ADDR", ":8000")}
-	app := &application{config: cfg}
+
+	cfg := config{
+		addr: env.GetString("ADDR", ":8000"),
+		db: dbConfig{
+			addr:         env.GetString("DB_ADDR", "postgres://postgres:strongpassword@localhost:5432/postgres?sslmode=disable"), // sslmode is disable because we are running locally
+			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 25),                                                                    // only 25 connections to the database
+			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 25),                                                                    // only 25 idle connections
+			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),                                                               //
+		},
+	}
+
+	db, err := db.New(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime)
+	if err != nil {
+		panic(err)
+	}
+	store := store.NewPostgresStorage(db)
+
+	app := &application{
+		config: cfg,
+		store:  store,
+	}
 
 	mux := app.mount()
 	log.Fatal(app.run(mux))

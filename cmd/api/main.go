@@ -32,6 +32,9 @@ func main() {
 		panic(err)
 	}
 	store := store.NewPostgresStorage(db)
+	// HOLLY SHI*T! i forgot to close database!!
+	defer db.Close()
+	log.Println("database connected.")
 
 	app := &application{
 		config: cfg,

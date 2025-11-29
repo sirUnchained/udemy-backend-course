@@ -3,7 +3,8 @@ package main
 import "net/http"
 
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("ok"))
 
-	// app.store.Posts.Create(r.Context())
+	if err := writeJSONError(w, 404, "404"); err != nil {
+		panic(err)
+	}
 }

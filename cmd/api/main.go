@@ -1,5 +1,3 @@
-// i added storage (database entities) for users and posts and put it in application struct; then i changed some env varables; then i added db file which is for database connections, i also installed postgres driver in this step; then we changed config struct for database.
-
 package main
 
 import (

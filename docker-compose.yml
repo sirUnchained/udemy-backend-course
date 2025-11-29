@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres
+    container_name: udemy-go-backend
+    environment:
+      POSTGRES_DB: social
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: strongpassword
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

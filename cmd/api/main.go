@@ -21,9 +21,9 @@ func main() {
 		addr: env.GetString("ADDR", ":8000"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://postgres:strongpassword@localhost:5432/postgres?sslmode=disable"), // sslmode is disable because we are running locally
-			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 25),                                                                    // only 25 connections to the database
-			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 25),                                                                    // only 25 idle connections
-			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),                                                               //
+			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 25),                                                                    // Maximum number of open connections to the database
+			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 25),                                                                    // Maximum number of idle connections in the pool
+			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),                                                               // Maximum time a connection can remain idle before being closed
 		},
 	}
 

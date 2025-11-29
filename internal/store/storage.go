@@ -5,6 +5,7 @@ import (
 	"database/sql"
 )
 
+// this is our sorage struct which is going to save entities interfaces
 type Storage struct {
 	Posts interface {
 		Create(context.Context, *Post) error

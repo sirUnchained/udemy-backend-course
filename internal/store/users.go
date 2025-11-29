@@ -6,10 +6,12 @@ import (
 	"time"
 )
 
+// this is user store (something like user database?)
 type UserStore struct {
 	db *sql.DB
 }
 
+// structure of user entity
 type User struct {
 	ID         int64     `json:"id"`
 	UserName   string    `json:"username"`
@@ -18,6 +20,7 @@ type User struct {
 	CreaetedAt time.Time `json:"creaeted_at"`
 }
 
+// CRUD users
 func (s *UserStore) Create(ctx context.Context, user *User) error {
 	query := `INSERT INTO posts (username, email, password) VALUES($1, $2, $3, $4) RETURNING id, created_at,`
 

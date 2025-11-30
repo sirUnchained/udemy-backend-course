@@ -5,6 +5,6 @@ import "net/http"
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := writeJSONError(w, 404, "404"); err != nil {
-		panic(err)
+		app.internalServerError(w, r, err)
 	}
 }

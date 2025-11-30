@@ -53,6 +53,10 @@ func (app *application) mount() http.Handler {
 				r.Get("/", app.getPostByIdHandler)
 			})
 		})
+
+		r.Route("/comments", func(r chi.Router) {
+			r.Post("/post/{postid}", app.createCommentHandler)
+		})
 	})
 
 	// chi.Mux implements http.Handler interface, we have no error if we return it

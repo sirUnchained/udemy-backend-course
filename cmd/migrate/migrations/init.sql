@@ -19,3 +19,13 @@ CREATE TABLE IF NOT EXISTS posts (
     created_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS comments (
+    id bigserial PRIMARY KEY,
+    user_id bigint NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    post_id bigint NOT NULL REFERENCES posts (id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP(0)
+    WITH
+        TIME ZONE NOT NULL DEFAULT NOW()
+);

@@ -1,9 +1,12 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/sirUnchained/udemy-backend-course/internal/store"
 )
 
@@ -17,7 +20,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	var payload CreatePostPayload
 	// read JSON from request body into post struct
 	if err := readJSON(w, r, &payload); err != nil {
-		writeJSONError(w, http.StatusBadRequest, "where is your json?")
+		writeJSONError(w, http.StatusBadRequest, "invalid json data.")
 		return
 	}
 
@@ -43,6 +46,31 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) getPostByIdHandler(w http.ResponseWriter, r *http.Request) {
+	// we use chi.URLParam to get the value of the "postid" URL parameter
+	postID := chi.URLParam(r, "postid")
 
+	// convert the postID string to an int64 in decimal base
+	id, err := strconv.ParseInt(postID, 10, 64)
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid post ID")
+		return
+	}
+
+	ctx := r.Context()
+	post, err := app.store.Posts.GetById(ctx, int64(id))
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrorNoRow):
+			writeJSONError(w, http.StatusNotFound, err.Error())
+		default:
+			log.Fatal(err)
+			writeJSONError(w, http.StatusInternalServerError, "something went wrong.")
+		}
+		return
+	}
+
+	if err := writeJSON(w, http.StatusOK, post); err != nil {
+		return
+	}
 }

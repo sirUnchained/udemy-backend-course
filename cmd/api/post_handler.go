@@ -9,9 +9,10 @@ import (
 	"github.com/sirUnchained/udemy-backend-course/internal/store"
 )
 
+// ALERT: use 'validate' tag, NOT 'validator'!!
 type CreatePostPayload struct {
-	Title   string   `json:"title"`
-	Content string   `json:"content"`
+	Title   string   `json:"title" validate:"required,max=250"`
+	Content string   `json:"content" validate:"required,max=1024"`
 	Tags    []string `json:"tags"`
 }
 
@@ -20,6 +21,11 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	// read JSON from request body into post struct
 	if err := readJSON(w, r, &payload); err != nil {
 		// writeJSONError(w, http.StatusBadRequest, "invalid json data.")
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
 	}

@@ -3,7 +3,16 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
+
+var Validate *validator.Validate
+
+func init() {
+	// it is good to pass 'WithRequiredStructEnabled' function
+	Validate = validator.New(validator.WithRequiredStructEnabled())
+}
 
 // writeJSON writes a JSON response with the given status code and data
 func writeJSON(w http.ResponseWriter, status int, data any) error {

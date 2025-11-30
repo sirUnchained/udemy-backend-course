@@ -11,11 +11,11 @@ func (app *application) internalServerError(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) badRequestError(w http.ResponseWriter, r *http.Request, err error) {
-	log.Fatalf("bad request error: %s path: %s error: %s\n", r.Method, r.URL.Path, err.Error())
+	log.Printf("bad request error: %s path: %s error: %s\n", r.Method, r.URL.Path, err.Error())
 	writeJSONError(w, http.StatusBadRequest, err.Error())
 }
 
 func (app *application) notFoundError(w http.ResponseWriter, r *http.Request, err error) {
-	log.Fatalf("404 error: %s path: %s error: %s\n", r.Method, r.URL.Path, err.Error())
+	log.Printf("404 error: %s path: %s error: %s\n", r.Method, r.URL.Path, err.Error())
 	writeJSONError(w, http.StatusNotFound, "the record not found.")
 }

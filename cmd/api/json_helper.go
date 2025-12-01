@@ -16,7 +16,7 @@ func init() {
 
 // writeJSON writes a JSON response with the given status code and data
 func writeJSON(w http.ResponseWriter, status int, data any) error {
-	w.Header().Set("Content-Type", "appliction/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	// Encode data as JSON and write to response writer
 	return json.NewEncoder(w).Encode(data)
@@ -46,4 +46,11 @@ func writeJSONError(w http.ResponseWriter, status int, msg string) error {
 
 	// use writeJSON to send the error response in consistent envelope format
 	return writeJSON(w, status, &envelope{Error: msg})
+}
+
+func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {
+	type envlope struct {
+		Data any `json:"data"`
+	}
+	return writeJSON(w, status, envlope{Data: data})
 }

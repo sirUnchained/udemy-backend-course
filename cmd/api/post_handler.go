@@ -54,7 +54,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := writeJSON(w, http.StatusOK, "created new post."); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, "created new post."); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -71,7 +71,7 @@ func (app *application) getPostByIdHandler(w http.ResponseWriter, r *http.Reques
 
 	post.Comments = comments
 
-	if err := writeJSON(w, http.StatusOK, post); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -84,7 +84,7 @@ func (app *application) deletePostByIdHandler(w http.ResponseWriter, r *http.Req
 	if err := app.store.Posts.DeleteById(ctx, int64(post.ID)); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNoRow):
-			// writeJSONError(w, http.StatusNotFound, err.Error())
+			// app.jsonResponseError(w, http.StatusNotFound, err.Error())
 			app.notFoundError(w, r, err)
 		default:
 			app.internalServerError(w, r, err)
@@ -92,7 +92,7 @@ func (app *application) deletePostByIdHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := writeJSON(w, http.StatusOK, "post is now deleted"); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, "post is now deleted"); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -121,7 +121,7 @@ func (app *application) updatePostByIdHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := writeJSON(w, http.StatusOK, post); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, post); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -135,7 +135,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 		// convert the postID string to an int64 in decimal base
 		id, err := strconv.ParseInt(postID, 10, 64)
 		if err != nil {
-			// writeJSONError(w, http.StatusBadRequest, "invalid post ID")
+			// app.jsonResponseError(w, http.StatusBadRequest, "invalid post ID")
 			app.badRequestError(w, r, err)
 			return
 		}
@@ -145,7 +145,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, store.ErrorNoRow):
-				// writeJSONError(w, http.StatusNotFound, err.Error())
+				// app.jsonResponseError(w, http.StatusNotFound, err.Error())
 				app.notFoundError(w, r, err)
 			default:
 				app.internalServerError(w, r, err)

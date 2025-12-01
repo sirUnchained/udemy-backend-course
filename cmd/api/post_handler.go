@@ -88,3 +88,38 @@ func (app *application) getPostByIdHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 }
+
+func (app *application) deletePostByIdHandler(w http.ResponseWriter, r *http.Request) {
+	// we use chi.URLParam to get the value of the "postid" URL parameter
+	postID := chi.URLParam(r, "postid")
+
+	// convert the postID string to an int64 in decimal base
+	id, err := strconv.ParseInt(postID, 10, 64)
+	if err != nil {
+		// writeJSONError(w, http.StatusBadRequest, "invalid post ID")
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	if err := app.store.Posts.DeleteById(ctx, int64(id)); err != nil {
+		switch {
+		case errors.Is(err, store.ErrorNoRow):
+			// writeJSONError(w, http.StatusNotFound, err.Error())
+			app.notFoundError(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := writeJSON(w, http.StatusOK, "post is now deleted"); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+func (app *application) updatePostByIdHandler(w http.ResponseWriter, r *http.Request) {
+	app.internalServerError(w, r, errors.New("not created yet"))
+	return
+}

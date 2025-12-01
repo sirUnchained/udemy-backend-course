@@ -84,7 +84,6 @@ func (app *application) deletePostByIdHandler(w http.ResponseWriter, r *http.Req
 	if err := app.store.Posts.DeleteById(ctx, int64(post.ID)); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNoRow):
-			// app.jsonResponseError(w, http.StatusNotFound, err.Error())
 			app.notFoundError(w, r, err)
 		default:
 			app.internalServerError(w, r, err)
@@ -117,7 +116,12 @@ func (app *application) updatePostByIdHandler(w http.ResponseWriter, r *http.Req
 
 	ctx := r.Context()
 	if err := app.store.Posts.UpdateById(ctx, post); err != nil {
-		app.badRequestError(w, r, err)
+		switch {
+		case errors.Is(err, store.ErrorNoRow):
+			app.notFoundError(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
 		return
 	}
 

@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS posts (
     content TEXT NOT NULL,
     user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     tags text[] NOT NULL DEFAULT '{}'::text[],
+    version INT DEFAULT 0,
     created_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW()
 );

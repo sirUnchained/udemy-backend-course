@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -16,11 +17,20 @@ type CreatePostPayload struct {
 	Tags    []string `json:"tags"`
 }
 
+type UpdatePostPayload struct {
+	Title   string `json:"title" validate:"required,max=250"`
+	Content string `json:"content" validate:"required,max=1024"`
+}
+
+// creating postKey new type for using in ctx
+type postKey string
+
+const postCtx postKey = "POST"
+
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
 	// read JSON from request body into post struct
 	if err := readJSON(w, r, &payload); err != nil {
-		// writeJSONError(w, http.StatusBadRequest, "invalid json data.")
 		app.badRequestError(w, r, err)
 		return
 	}
@@ -51,31 +61,9 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) getPostByIdHandler(w http.ResponseWriter, r *http.Request) {
-	// we use chi.URLParam to get the value of the "postid" URL parameter
-	postID := chi.URLParam(r, "postid")
+	post := getPostFromCtx(r)
 
-	// convert the postID string to an int64 in decimal base
-	id, err := strconv.ParseInt(postID, 10, 64)
-	if err != nil {
-		// writeJSONError(w, http.StatusBadRequest, "invalid post ID")
-		app.badRequestError(w, r, err)
-		return
-	}
-
-	ctx := r.Context()
-	post, err := app.store.Posts.GetById(ctx, int64(id))
-	if err != nil {
-		switch {
-		case errors.Is(err, store.ErrorNoRow):
-			// writeJSONError(w, http.StatusNotFound, err.Error())
-			app.notFoundError(w, r, err)
-		default:
-			app.internalServerError(w, r, err)
-		}
-		return
-	}
-
-	comments, err := app.store.Comments.GetCommentsByPostId(ctx, int64(id))
+	comments, err := app.store.Comments.GetCommentsByPostId(r.Context(), int64(post.ID))
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
@@ -90,19 +78,10 @@ func (app *application) getPostByIdHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) deletePostByIdHandler(w http.ResponseWriter, r *http.Request) {
-	// we use chi.URLParam to get the value of the "postid" URL parameter
-	postID := chi.URLParam(r, "postid")
-
-	// convert the postID string to an int64 in decimal base
-	id, err := strconv.ParseInt(postID, 10, 64)
-	if err != nil {
-		// writeJSONError(w, http.StatusBadRequest, "invalid post ID")
-		app.badRequestError(w, r, err)
-		return
-	}
+	post := getPostFromCtx(r)
 
 	ctx := r.Context()
-	if err := app.store.Posts.DeleteById(ctx, int64(id)); err != nil {
+	if err := app.store.Posts.DeleteById(ctx, int64(post.ID)); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNoRow):
 			// writeJSONError(w, http.StatusNotFound, err.Error())
@@ -120,6 +99,69 @@ func (app *application) deletePostByIdHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (app *application) updatePostByIdHandler(w http.ResponseWriter, r *http.Request) {
-	app.internalServerError(w, r, errors.New("not created yet"))
-	return
+	post := getPostFromCtx(r)
+	var payload UpdatePostPayload
+
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	post.Title = payload.Title
+	post.Content = payload.Content
+
+	ctx := r.Context()
+	if err := app.store.Posts.UpdateById(ctx, post); err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
+	if err := writeJSON(w, http.StatusOK, post); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// we use chi.URLParam to get the value of the "postid" URL parameter
+		postID := chi.URLParam(r, "postid")
+
+		// convert the postID string to an int64 in decimal base
+		id, err := strconv.ParseInt(postID, 10, 64)
+		if err != nil {
+			// writeJSONError(w, http.StatusBadRequest, "invalid post ID")
+			app.badRequestError(w, r, err)
+			return
+		}
+
+		ctx := r.Context()
+		post, err := app.store.Posts.GetById(ctx, int64(id))
+		if err != nil {
+			switch {
+			case errors.Is(err, store.ErrorNoRow):
+				// writeJSONError(w, http.StatusNotFound, err.Error())
+				app.notFoundError(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		ctx = context.WithValue(ctx, postCtx, post)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func getPostFromCtx(r *http.Request) *store.Post {
+	// insted of 'postCtx' we could use a normal string BUT this is not good
+	// we should create a type insted and we did it as you can see
+	post, _ := r.Context().Value(postCtx).(*store.Post)
+
+	return post
 }

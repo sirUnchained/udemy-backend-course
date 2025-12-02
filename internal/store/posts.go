@@ -25,6 +25,12 @@ type Post struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Comments  []Comment `json:"comments"`
+	User      User      `json:"user"`
+}
+
+type PostWithMetadata struct {
+	Post
+	CommentsCount int `json:"comments_count"`
 }
 
 // CRUD users
@@ -78,6 +84,53 @@ func (s *PostStore) GetById(ctx context.Context, id int64) (*Post, error) {
 	}
 
 	return &post, nil
+}
+
+func (s *PostStore) GetUserFeed(ctx context.Context, id int64) ([]PostWithMetadata, error) {
+	query := `
+	SELECT p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags, 
+		u.username, COUNT(*) AS comments_count
+	FROM posts AS p
+	LEFT JOIN comments AS c on c.post_id = p.id
+	LEFT JOIN users AS u ON p.users = u.id
+	JOIN followers AS f ON f.follower_id = p.user_id OR p.user_id = $1
+	WHERE f.user_id = $1 OR p.user_id = $1
+	GROUP BY p.id, u.username
+	ORDER BY c.created_at DESC;
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var feed []PostWithMetadata
+	for rows.Next() {
+		var p PostWithMetadata
+
+		err := rows.Scan(
+			&p.ID,
+			&p.UserID,
+			&p.Title,
+			&p.Content,
+			&p.CreatedAt,
+			&p.Version,
+			pq.Array(&p.Tags),
+			&p.User.UserName,
+			&p.CommentsCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		feed = append(feed, p)
+	}
+
+	return feed, nil
 }
 
 func (s *PostStore) DeleteById(ctx context.Context, id int64) error {

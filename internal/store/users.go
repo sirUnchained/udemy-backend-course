@@ -68,3 +68,13 @@ func (s *UserStore) GetById(ctx context.Context, id int64) (*User, error) {
 
 	return user, nil
 }
+
+func (s *UserStore) UpdateById(ctx context.Context, user *User) error {
+	query := `
+		UPDATE posts
+			SET username = $1, email = $2
+		WHERE id = $3
+	`
+	print(query)
+	return nil
+}

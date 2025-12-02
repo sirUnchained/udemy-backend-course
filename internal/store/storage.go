@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrorNoRow           = errors.New("record not found")
+	Errconflict          = errors.New("resource already exists")
 	QueryTimeoutDuration = time.Second * 5
 )
 

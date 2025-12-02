@@ -15,6 +15,11 @@ func (app *application) badRequestError(w http.ResponseWriter, r *http.Request, 
 	writeJSONError(w, http.StatusBadRequest, err.Error())
 }
 
+func (app *application) conflictRequestError(w http.ResponseWriter, r *http.Request, err error) {
+	log.Printf("conflict error: %s path: %s error: %s\n", r.Method, r.URL.Path, err.Error())
+	writeJSONError(w, http.StatusConflict, err.Error())
+}
+
 func (app *application) notFoundError(w http.ResponseWriter, r *http.Request, err error) {
 	log.Printf("404 error: %s path: %s error: %s\n", r.Method, r.URL.Path, err.Error())
 	writeJSONError(w, http.StatusNotFound, "the record not found.")

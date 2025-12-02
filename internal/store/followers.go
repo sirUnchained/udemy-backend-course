@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type FollowStore struct {
@@ -22,8 +24,19 @@ func (s *FollowStore) Follow(ctx context.Context, followerID int64, userID int64
 		VALUES ($1, $2, $3)
 		ON CONFLICT DO NOTHING
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	_, err := s.db.ExecContext(ctx, query, userID, followerID, time.Now().UTC())
-	return err
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+			return Errconflict
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (s *FollowStore) UnFollow(ctx context.Context, followerID int64, userID int64) error {
@@ -31,6 +44,17 @@ func (s *FollowStore) UnFollow(ctx context.Context, followerID int64, userID int
 		DELETE FROM followers
 		WHERE user_id = $1 AND follower_id = $2
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	_, err := s.db.ExecContext(ctx, query, userID, followerID)
-	return err
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+			return Errconflict
+		}
+		return err
+	}
+
+	return nil
 }

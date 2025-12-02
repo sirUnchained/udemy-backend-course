@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -34,7 +33,6 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 
 	// todo: back when u finished auth
 	var payload FollowUser
-	fmt.Println(payload)
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
@@ -42,7 +40,12 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 
 	ctx := r.Context()
 	if err := app.store.Followers.Follow(ctx, followerUser.ID, payload.UserID); err != nil {
-		app.internalServerError(w, r, err)
+		switch {
+		case errors.Is(err, store.Errconflict):
+			app.badRequestError(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
 		return
 	}
 
@@ -57,7 +60,6 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 
 	// todo: back when u finished auth
 	var payload FollowUser
-	fmt.Println(payload)
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
 		return
@@ -65,7 +67,12 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 
 	ctx := r.Context()
 	if err := app.store.Followers.UnFollow(ctx, followerUser.ID, payload.UserID); err != nil {
-		app.internalServerError(w, r, err)
+		switch {
+		case errors.Is(err, store.Errconflict):
+			app.conflictRequestError(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
 		return
 	}
 

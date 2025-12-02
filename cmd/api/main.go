@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sirUnchained/udemy-backend-course/internal/db"
 	"github.com/sirUnchained/udemy-backend-course/internal/env"
+	"github.com/sirUnchained/udemy-backend-course/internal/seeds"
 	"github.com/sirUnchained/udemy-backend-course/internal/store"
 )
 
@@ -16,6 +17,8 @@ func main() {
 		log.Fatalln(err)
 		os.Exit(-1)
 	}
+
+	debugMode := env.GetInt("DEBUGMODE", 1)
 
 	cfg := config{
 		addr: env.GetString("ADDR", ":8000"),
@@ -40,6 +43,9 @@ func main() {
 		config: cfg,
 		store:  store,
 	}
+
+	// seeds
+	seeds.Seed(app.store, (debugMode == 1))
 
 	mux := app.mount()
 	log.Fatal(app.run(mux))

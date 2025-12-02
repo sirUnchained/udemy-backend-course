@@ -92,11 +92,11 @@ func (s *PostStore) GetUserFeed(ctx context.Context, id int64) ([]PostWithMetada
 		u.username, COUNT(*) AS comments_count
 	FROM posts AS p
 	LEFT JOIN comments AS c on c.post_id = p.id
-	LEFT JOIN users AS u ON p.users = u.id
+	LEFT JOIN users AS u ON p.user_id = u.id
 	JOIN followers AS f ON f.follower_id = p.user_id OR p.user_id = $1
 	WHERE f.user_id = $1 OR p.user_id = $1
 	GROUP BY p.id, u.username
-	ORDER BY c.created_at DESC;
+	ORDER BY p.created_at DESC;
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)

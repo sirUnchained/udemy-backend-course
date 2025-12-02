@@ -6,7 +6,7 @@ import (
 )
 
 func (app *application) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
-	log.Fatalf("internal server error: %s path: %s error: %s\n", r.Method, r.URL.Path, err.Error())
+	log.Printf("internal server error: %s path: %s error: %s\n", r.Method, r.URL.Path, err.Error())
 	writeJSONError(w, http.StatusInternalServerError, "something went wrong with us, we'll fix this as soon as we can.")
 }
 

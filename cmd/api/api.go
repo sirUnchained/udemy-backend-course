@@ -30,10 +30,10 @@ type dbConfig struct {
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 
-	// a simple logger for HTTP requests
-	r.Use(middleware.Logger)
 	// recovers from panics and returns 500 error
 	r.Use(middleware.Recoverer)
+	// a simple logger for HTTP requests
+	r.Use(middleware.Logger)
 	// sets real IP from X-Real-IP or X-Forwarded-For headers
 	r.Use(middleware.RealIP)
 	// adds a unique request ID to each request
@@ -60,6 +60,12 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/comments", func(r chi.Router) {
 			r.Post("/post/{postid}", app.createCommentHandler)
+		})
+
+		r.Route("/users", func(r chi.Router) {
+			r.Route("/{userid}", func(r chi.Router) {
+				r.Get("/", app.getUserHandler)
+			})
 		})
 	})
 

@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 )
 
 var (
-	ErrorNoRow = errors.New("record not found")
+	ErrorNoRow           = errors.New("record not found")
+	QueryTimeoutDuration = time.Second * 5
 )
 
 // this is our sorage struct which is going to save entities interfaces
@@ -20,6 +22,7 @@ type Storage struct {
 	}
 	Users interface {
 		Create(context.Context, *User) error
+		GetById(context.Context, int64) (*User, error)
 	}
 	Comments interface {
 		Create(context.Context, *Comment) error

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -11,11 +10,13 @@ import (
 	"github.com/sirUnchained/udemy-backend-course/docs"
 	"github.com/sirUnchained/udemy-backend-course/internal/store"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"go.uber.org/zap"
 )
 
 type application struct {
 	config config
 	store  store.Storage
+	logger *zap.SugaredLogger
 }
 
 type config struct {
@@ -102,7 +103,7 @@ func (app *application) run(mux http.Handler) error {
 	}
 
 	// Log server start information
-	log.Printf("server listening on %s", app.config.addr)
+	app.logger.Infoln("server started", "addr:", app.config.addr)
 
 	// Start the HTTP server
 	return srv.ListenAndServe()

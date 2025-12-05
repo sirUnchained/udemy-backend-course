@@ -18,6 +18,20 @@ type FollowUser struct {
 	UserID int64 `json:"user_id"`
 }
 
+// GetUser		 godoc
+//
+//	@Summary		fetch a user by id
+//	@Description	i dont know! just get a fucking user!
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			userid	path		int	true	"User ID"
+//	@Success		200		{object}	store.User
+//	@Failure		400		{object}	error
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/{userid}/follow 	[PUT]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.getUserFromCtx(r)
 
@@ -28,6 +42,20 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// FollowUser		godoc
+//
+//	@Summary		follow a user by id
+//	@Description	i dont know! just follow a fucking user!
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int			true	"User ID"
+//	@Success		200	{object}	store.User	"user followed"
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error	"user not found"
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/{userid} 	[get]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := app.getUserFromCtx(r)
 

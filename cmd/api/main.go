@@ -11,6 +11,24 @@ import (
 	"github.com/sirUnchained/udemy-backend-course/internal/store"
 )
 
+const VERSION = "1.0"
+
+//	@title			go-social api
+//	@description	This is a sample server Petstore server.
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @BasePath					/v1
+//
+// @SecurityDefinitions.apiKey	ApiKeyAuth
+// @in							header
+// @name						Authorization
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -28,6 +46,7 @@ func main() {
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 25),                                                                    // Maximum number of idle connections in the pool
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),                                                               // Maximum time a connection can remain idle before being closed
 		},
+		apiURL: env.GetString("EXTERNAL_URL", "127.0.0.1:4000"),
 	}
 
 	db, err := db.New(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime)

@@ -55,7 +55,7 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		404	{object}	error	"user not found"
 //	@Failure		500	{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/users/{userid} 	[get]
+//	@Router			/users/{userid} 	[put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := app.getUserFromCtx(r)
 
@@ -83,6 +83,20 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// unFollowUser		godoc
+//
+//	@Summary		unfollow a user by id
+//	@Description	i dont know! just unfollow a fucking user!
+//	@Tags			user
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int			true	"User ID"
+//	@Success		200	{object}	store.User	"user unfollowed"
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error	"user not found"
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/{userid} 	[put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := app.getUserFromCtx(r)
 

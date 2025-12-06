@@ -2,6 +2,7 @@ package seeds
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -23,7 +24,7 @@ var adjectives = []string{"Adventurous", "Creative", "Curious", "Friendly", "Hel
 var hobbies = []string{"loves hiking", "enjoys reading", "plays guitar", "codes for fun", "travels often", "cooks meals", "photographs nature", "paints landscapes", "writes stories", "studies history"}
 var qualities = []string{"always learning", "seeking challenges", "making friends", "exploring new places", "helping others", "sharing knowledge", "building things", "solving problems", "creating art", "teaching skills"}
 
-func Seed(st store.Storage, debugMode bool) {
+func Seed(st store.Storage, debugMode bool, db *sql.DB) {
 	if !debugMode {
 		log.Println("we are not in debug mode, so ignore seeds")
 		return
@@ -31,12 +32,17 @@ func Seed(st store.Storage, debugMode bool) {
 	ctx := context.Background()
 
 	users := generateUsers(100)
+	tx, _ := db.BeginTx(ctx, nil)
+
 	for _, user := range users {
-		if err := st.Users.Create(ctx, user); err != nil {
+		if err := st.Users.Create(ctx, tx, user); err != nil {
+			tx.Rollback()
 			log.Println("Error: ", err)
 			return
 		}
 	}
+
+	tx.Commit()
 
 	posts := generatePosts(100, users)
 	for _, post := range posts {
@@ -63,8 +69,8 @@ func generateUsers(num int) []*store.User {
 		users[i] = &store.User{
 			UserName: usernames[i%len(usernames)] + fmt.Sprintf("%d", i),
 			Email:    usernames[i%len(usernames)] + fmt.Sprintf("%d", i) + "@example.com",
-			Password: "123123123",
 		}
+		users[i].Password.Set("12341234")
 	}
 
 	return users

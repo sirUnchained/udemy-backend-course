@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(255) UNIQUE NOT NULL,
     password bytea NOT NULL, -- password is hashed so we use bytea
+    is_active BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP(0)
     WITH
         TIME ZONE NOT NULL DEFAULT NOW()
@@ -40,6 +41,14 @@ CREATE TABLE IF NOT EXISTS followers (
         PRIMARY KEY (user_id, follower_id), -- composite key: user A can follow B only one time not 2 times!
         Foreign Key (user_id) REFERENCES users (id) ON DELETE CASCADE,
         Foreign Key (follower_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_invitations (
+    token bytea PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    expiry TIMESTAMP(0)
+    WITH
+        TIME ZONE NOT NULL
 );
 
 CREATE Extention IF NOT EXISTS pg_trgm;

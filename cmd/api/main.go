@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/sirUnchained/udemy-backend-course/internal/db"
@@ -44,7 +45,8 @@ func main() {
 	// Set ENV
 	debugMode := env.GetInt("DEBUGMODE", 1)
 	cfg := config{
-		addr: env.GetString("ADDR", ":8000"),
+		addr:   env.GetString("ADDR", ":8000"),
+		apiURL: env.GetString("EXTERNAL_URL", "127.0.0.1:4000"),
 		// database ENV
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://postgres:strongpassword@localhost:5432/postgres?sslmode=disable"), // sslmode is disable because we are running locally
@@ -52,7 +54,9 @@ func main() {
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 25),                                                                    // Maximum number of idle connections in the pool
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),                                                               // Maximum time a connection can remain idle before being closed
 		},
-		apiURL: env.GetString("EXTERNAL_URL", "127.0.0.1:4000"),
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3, // 3 days
+		},
 	}
 
 	// start database connection
@@ -71,7 +75,7 @@ func main() {
 	}
 
 	// seeds
-	seeds.Seed(app.store, (debugMode == 1))
+	seeds.Seed(app.store, (debugMode == 1), db)
 
 	mux := app.mount()
 	logger.Fatalln(app.run(mux))

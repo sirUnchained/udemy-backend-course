@@ -115,7 +115,7 @@ func (app *application) updatePostByIdHandler(w http.ResponseWriter, r *http.Req
 	post.Content = payload.Content
 
 	ctx := r.Context()
-	if err := app.store.Posts.UpdateById(ctx, post); err != nil {
+	if err := app.store.Posts.Update(ctx, post); err != nil {
 		switch {
 		case errors.Is(err, store.ErrorNoRow):
 			app.notFoundError(w, r, err)

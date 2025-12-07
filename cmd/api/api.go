@@ -24,6 +24,7 @@ type config struct {
 	db     dbConfig
 	apiURL string
 	mail   mailConfig
+	auth   authConfig
 }
 
 type dbConfig struct {
@@ -35,6 +36,15 @@ type dbConfig struct {
 
 type mailConfig struct {
 	exp time.Duration
+}
+
+type authConfig struct {
+	basic basicConfig
+}
+
+type basicConfig struct {
+	user string
+	pass string
 }
 
 func (app *application) mount() http.Handler {

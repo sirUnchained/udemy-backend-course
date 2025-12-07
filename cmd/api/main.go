@@ -57,6 +57,12 @@ func main() {
 		mail: mailConfig{
 			exp: time.Hour * 24 * 3, // 3 days
 		},
+		auth: authConfig{
+			basic: basicConfig{
+				user: env.GetString("AUTH_BASIC_USER", "admin"),
+				pass: env.GetString("AUTH_BASIC_PASS", "admin"),
+			},
+		},
 	}
 
 	// start database connection

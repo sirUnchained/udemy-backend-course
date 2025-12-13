@@ -59,7 +59,13 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := app.getUserFromCtx(r)
 
-	// todo: back when u finished auth
+	id_str := chi.URLParam(r, "userid")
+	followedId, err := strconv.ParseInt(id_str, 10, 64)
+	if err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
 	var payload FollowUser
 	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestError(w, r, err)
@@ -67,7 +73,7 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	ctx := r.Context()
-	if err := app.store.Followers.Follow(ctx, followerUser.ID, payload.UserID); err != nil {
+	if err := app.store.Followers.Follow(ctx, followerUser.ID, followedId); err != nil {
 		switch {
 		case errors.Is(err, store.Errconflict):
 			app.badRequestError(w, r, err)
@@ -100,6 +106,13 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := app.getUserFromCtx(r)
 
+	id_str := chi.URLParam(r, "userid")
+	unfollowedId, err := strconv.ParseInt(id_str, 10, 64)
+	if err != nil {
+		app.badRequestError(w, r, err)
+		return
+	}
+
 	// todo: back when u finished auth
 	var payload FollowUser
 	if err := readJSON(w, r, &payload); err != nil {
@@ -108,7 +121,7 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	ctx := r.Context()
-	if err := app.store.Followers.UnFollow(ctx, followerUser.ID, payload.UserID); err != nil {
+	if err := app.store.Followers.UnFollow(ctx, followerUser.ID, unfollowedId); err != nil {
 		switch {
 		case errors.Is(err, store.Errconflict):
 			app.conflictRequestError(w, r, err)
@@ -138,7 +151,7 @@ func (app *application) userContextMiddleware(next http.Handler) http.Handler {
 		user, err := app.store.Users.GetById(ctx, id)
 		if err != nil {
 			switch {
-			case errors.Is(err, store.ErrorNoRow):
+			case errors.Is(err, store.ErrNotFound):
 				app.notFoundError(w, r, err)
 				return
 			default:

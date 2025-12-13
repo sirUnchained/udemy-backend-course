@@ -40,11 +40,11 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	userid := 1 // TODO: get from auth context
+	user := app.getUserFromCtx(r)
 	post := &store.Post{
 		Title:   payload.Title,
 		Content: payload.Content,
-		UserID:  int64(userid),
+		UserID:  user.ID,
 		Tags:    payload.Tags,
 	}
 
@@ -83,7 +83,7 @@ func (app *application) deletePostByIdHandler(w http.ResponseWriter, r *http.Req
 	ctx := r.Context()
 	if err := app.store.Posts.DeleteById(ctx, int64(post.ID)); err != nil {
 		switch {
-		case errors.Is(err, store.ErrorNoRow):
+		case errors.Is(err, store.ErrNotFound):
 			app.notFoundError(w, r, err)
 		default:
 			app.internalServerError(w, r, err)
@@ -117,7 +117,7 @@ func (app *application) updatePostByIdHandler(w http.ResponseWriter, r *http.Req
 	ctx := r.Context()
 	if err := app.store.Posts.Update(ctx, post); err != nil {
 		switch {
-		case errors.Is(err, store.ErrorNoRow):
+		case errors.Is(err, store.ErrNotFound):
 			app.notFoundError(w, r, err)
 		default:
 			app.internalServerError(w, r, err)
@@ -148,7 +148,7 @@ func (app *application) postsContextMiddleware(next http.Handler) http.Handler {
 		post, err := app.store.Posts.GetById(ctx, int64(id))
 		if err != nil {
 			switch {
-			case errors.Is(err, store.ErrorNoRow):
+			case errors.Is(err, store.ErrNotFound):
 				// app.jsonResponseError(w, http.StatusNotFound, err.Error())
 				app.notFoundError(w, r, err)
 			default:

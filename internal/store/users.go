@@ -19,12 +19,12 @@ type UserStore struct {
 
 // structure of user entity
 type User struct {
-	ID         int64     `json:"id"`
-	UserName   string    `json:"username"`
-	Email      string    `json:"email"`
-	Password   password  `json:"_"`
-	CreaetedAt time.Time `json:"creaeted_at"`
-	IsActive   bool      `json:"is_active"`
+	ID        int64     `json:"id"`
+	UserName  string    `json:"username"`
+	Email     string    `json:"email"`
+	Password  password  `json:"_"`
+	CreatedAt time.Time `json:"creaeted_at"`
+	IsActive  bool      `json:"is_active"`
 }
 
 type password struct {
@@ -44,6 +44,15 @@ func (p *password) Set(pass string) error {
 	return nil
 }
 
+func (p *password) Compare(pass string) error {
+	err := bcrypt.CompareHashAndPassword(p.hash, []byte(pass))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // CRUD users
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	query := `INSERT INTO users (username, email, password) VALUES($1, $2, $3) RETURNING id, created_at;`
@@ -57,7 +66,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 		user.Password.hash,
 	).Scan(
 		&user.ID,
-		&user.CreaetedAt,
+		&user.CreatedAt,
 	)
 	if err != nil {
 		switch {
@@ -84,13 +93,14 @@ func (s *UserStore) GetById(ctx context.Context, id int64) (*User, error) {
 		&user.ID,
 		&user.UserName,
 		&user.Email,
-		&user.CreaetedAt,
+		&user.Password.hash,
+		&user.CreatedAt,
 	)
 
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrorNoRow
+			return nil, ErrNotFound
 		default:
 			return nil, err
 		}
@@ -150,6 +160,35 @@ func (s *UserStore) Activate(ctx context.Context, token string) error {
 	})
 }
 
+func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
+	query := `
+		SELECT id, username, email, password, created_at FROM users
+		WHERE email = $1 AND is_active = true
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	user := &User{}
+	err := s.db.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.UserName,
+		&user.Email,
+		&user.Password.hash,
+		&user.CreatedAt,
+	)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return user, nil
+}
+
 func (s *UserStore) createUserInvitation(ctx context.Context, tx *sql.Tx, token string, invitationExp time.Duration, userID int64) error {
 	query := `INSERT INTO user_invitations (token, user_id, expiry) VALUES ($1, $2, $3);`
 
@@ -195,13 +234,13 @@ func (s *UserStore) getUserFromInvitation(ctx context.Context, tx *sql.Tx, token
 		&user.ID,
 		&user.UserName,
 		&user.Email,
-		&user.CreaetedAt,
+		&user.CreatedAt,
 		&user.IsActive,
 	)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			return nil, ErrorNoRow
+			return nil, ErrNotFound
 		default:
 			return user, err
 		}

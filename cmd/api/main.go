@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/sirUnchained/udemy-backend-course/internal/auth"
 	"github.com/sirUnchained/udemy-backend-course/internal/db"
 	"github.com/sirUnchained/udemy-backend-course/internal/env"
 	"github.com/sirUnchained/udemy-backend-course/internal/seeds"
@@ -62,6 +63,11 @@ func main() {
 				user: env.GetString("AUTH_BASIC_USER", "admin"),
 				pass: env.GetString("AUTH_BASIC_PASS", "admin"),
 			},
+			token: tokenConfig{
+				secret: env.GetString("AUTH_TOKEN_SECRET", "some secret token"),
+				exp:    time.Hour * 24 * 3,
+				iss:    "our host name",
+			},
 		},
 	}
 
@@ -74,10 +80,14 @@ func main() {
 	defer db.Close() // HOLLY SHI*T! i forgot to close database!!
 	logger.Infoln("database connected.")
 
+	// config jwt
+	jwtAuthenticator := auth.NewJWTAuthenticator(cfg.auth.token.secret, cfg.auth.token.iss, cfg.auth.token.iss)
+
 	app := &application{
-		config: cfg,
-		store:  store,
-		logger: logger,
+		config:        cfg,
+		store:         store,
+		logger:        logger,
+		authenticator: jwtAuthenticator,
 	}
 
 	// seeds

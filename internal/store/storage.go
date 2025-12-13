@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrorNoRow            = errors.New("record not found")
+	ErrNotFound           = errors.New("record not found")
 	Errconflict           = errors.New("resource already exists")
 	ErrDuplicatedEmail    = errors.New("email duplicated")
 	ErrDuplicatedUsername = errors.New("username duplicated")
@@ -30,6 +30,7 @@ type Storage struct {
 		Update(context.Context, *sql.Tx, *User) error
 		CreateAndInvite(ctx context.Context, user *User, token string, invitationExp time.Duration) error
 		Activate(context.Context, string) error
+		GetByEmail(context.Context, string) (*User, error)
 	}
 	Comments interface {
 		Create(context.Context, *Comment) error

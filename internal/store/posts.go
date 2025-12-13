@@ -77,7 +77,7 @@ func (s *PostStore) GetById(ctx context.Context, id int64) (*Post, error) {
 	if err != nil {
 		switch {
 		case err == sql.ErrNoRows:
-			return nil, ErrorNoRow
+			return nil, ErrNotFound
 		default:
 			return nil, err
 		}
@@ -154,7 +154,7 @@ func (s *PostStore) DeleteById(ctx context.Context, id int64) error {
 	}
 
 	if rows == 0 {
-		return ErrorNoRow
+		return ErrNotFound
 	}
 
 	return nil
@@ -182,7 +182,7 @@ func (s *PostStore) Update(ctx context.Context, post *Post) error {
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return ErrorNoRow
+			return ErrNotFound
 		default:
 			return err
 		}
